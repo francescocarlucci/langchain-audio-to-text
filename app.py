@@ -21,7 +21,7 @@ def CustomAudioLoader(file, file_name, api_key):
 
 	return Document(
 		page_content = transcript['text'],
-		metadata = { 'file_name': file_name }
+		metadata = {'file_name': file_name}
 	)
 
 st.header('🔊 Convert Voice Memos to Text')
@@ -39,9 +39,9 @@ st.info("You need your own keys to run commercial LLM models.\
 
 openai_key = st.text_input("OpenAI Api Key", help="You need an account on OpenAI to generate a key: https://openai.com/blog/openai-api")
 
-voice_memos = st.file_uploader("Upload your voice memos", type=["m4a", "mp3"])
+voice_memos = st.file_uploader("Upload your voice memos", type=["m4a", "mp3"], accept_multiple_files=True)
 
-post_processing = st.checkbox('Process your text transcript with a custom prompt')
+post_processing = st.checkbox('Post-process your text transcript with a custom prompt')
 
 with st.form("audio_text"):	
 
@@ -65,38 +65,40 @@ with st.form("audio_text"):
 
 			if voice_memos is not None:
 
-				file_name, file_extension = os.path.splitext(voice_memos.name)
+				for voice_memo in voice_memos:
 
-				with tempfile.NamedTemporaryFile(suffix=file_extension, delete=False) as temporary_file:
+					file_name, file_extension = os.path.splitext(voice_memo.name)
 
-					temporary_file.write(voice_memos.read())
+					with tempfile.NamedTemporaryFile(suffix=file_extension, delete=False) as temporary_file:
 
-				audio_doc = CustomAudioLoader(temporary_file, file_name, openai_key)
+						temporary_file.write(voice_memo.read())
 
-				if post_processing:
+					audio_doc = CustomAudioLoader(temporary_file, file_name, openai_key)
 
-					llm = ChatOpenAI(openai_api_key=openai_key, temperature=0)
+					if post_processing:
 
-					prompt = ChatPromptTemplate.from_template('''
-					{prompt}
-					{transcript}
-					''')
+						llm = ChatOpenAI(openai_api_key=openai_key, temperature=0)
 
-					chain = LLMChain(llm=llm, prompt=prompt)
+						prompt = ChatPromptTemplate.from_template('''
+						{prompt}
+						{transcript}
+						''')
 
-					response = chain.run({
-						'prompt': custom_prompt,
-						'transcript': audio_doc.page_content
-					})
-					
-					st.write(response)
+						chain = LLMChain(llm=llm, prompt=prompt)
 
-				else:
+						response = chain.run({
+							'prompt': custom_prompt,
+							'transcript': audio_doc.page_content
+						})
+						
+						st.write(response)
 
-					st.write(audio_doc.page_content)
+					else:
 
-				# clean-up the temporary file
-				os.remove(temporary_file.name)
+						st.write(audio_doc.page_content)
+
+					# clean-up the temporary file
+					os.remove(temporary_file.name)
 
 with st.expander("Exercise Tips"):
 	st.write('''
