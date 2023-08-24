@@ -12,7 +12,7 @@ st.set_page_config(
     page_icon="🔊"
 )
 
-# custom audio loade using OpenAI whisper API
+# simple audio loader using OpenAI whisper API
 def CustomAudioLoader(file, file_name, api_key):
 
 	audio_file = open(file.name, "rb")
@@ -31,8 +31,19 @@ st.subheader('Learn LangChain | Demo Project #5')
 st.success("This is a demo project related to the [Learn LangChain](https://learnlangchain.org/) mini-course.")
 
 st.write('''
-...
-''')
+This demo project takes inspiration from real life. I was reading a nutrition book and taking some
+audio notes/voice memos to keep track of the most useful information. Once finished the book, I
+thought that it would be useful to put the information together in an organic document, and that's
+really the kind of task you can automate with LangChain and LLM.
+
+In this tool, we build a simplified version of a custom LangChain document loader, to transcribe the
+audio using the OpenAI Whisper model and return it in the standardized LangChain format. This would
+not have been a required step, but in case we want to store the audios, split them or create more
+elaborated flows, it's always nice to stick with the LangChain default document format.
+
+The tool can transcribe the voice memos as they are, or you can provide a custom prompt to adjust
+the tone, translate into another language, fix thegrammar or the form, or - like in my case - organize
+the transcripts into book chapters. Sky is the limit!''')
 
 st.info("You need your own keys to run commercial LLM models.\
     The form will process your keys safely and never store them anywhere.", icon="🔒")
@@ -46,6 +57,12 @@ post_processing = st.checkbox('Post-process your text transcript with a custom p
 with st.form("audio_text"):	
 
 	if post_processing:
+
+		model = st.selectbox(
+			'Select a model',
+			('gpt-3.5-turbo','gpt-4'),
+			help="Make sure your account is elegible for GPT4 before using it"
+		)
 
 		custom_prompt = st.text_area("Custom prompt")
 
@@ -77,7 +94,7 @@ with st.form("audio_text"):
 
 					if post_processing:
 
-						llm = ChatOpenAI(openai_api_key=openai_key, temperature=0)
+						llm = ChatOpenAI(openai_api_key=openai_key, temperature=0, model_name=model)
 
 						prompt = ChatPromptTemplate.from_template('''
 						{prompt}
@@ -105,6 +122,8 @@ with st.expander("Exercise Tips"):
 	This demo is probably the most interesting one to expand and improve:
 	- Browse [the code on GitHub](https://github.com/francescocarlucci/wordpress-code-assistant/blob/main/app.py) and make sure you understand it.
 	- Fork the repository to customize the code.
+	- Try to rewrite the document loader as a Class, and give it the same structure as others LangCHain loaders (TextLoader, CSVLoader).
+	- Get creative and produce more post processing flows, maybe enriching the UI as well. 
 	''')
 
 st.divider()
